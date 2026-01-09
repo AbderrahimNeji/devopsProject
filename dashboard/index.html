@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Degradation Detection Dashboard</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🛣️ Road Degradation Detection System</h1>
+            <p class="subtitle">AI-powered infrastructure monitoring with GPS geolocation</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="section">
+                    <h2>📤 Upload</h2>
+                    <div class="upload-section">
+                        <label class="upload-label">
+                            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                            <span class="btn btn-primary">📷 Upload Image</span>
+                        </label>
+                        <label class="upload-label">
+                            <input type="file" id="videoUpload" accept="video/*" style="display: none;">
+                            <span class="btn btn-primary">🎬 Upload Video</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>⚙️ Settings</h2>
+                    <div class="settings">
+                        <label>
+                            Confidence Threshold
+                            <input type="range" id="confThreshold" min="0" max="1" step="0.05" value="0.25">
+                            <span id="confValue">0.25</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>📊 Statistics</h2>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalDetections">0</div>
+                            <div class="stat-label">Total Detections</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalPotholes">0</div>
+                            <div class="stat-label">Potholes</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalCracks">0</div>
+                            <div class="stat-label">Cracks</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalCrazing">0</div>
+                            <div class="stat-label">Crazing</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalMarkings">0</div>
+                            <div class="stat-label">Faded Markings</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🗂️ Filters</h2>
+                    <div class="filters">
+                        <label>
+                            <input type="checkbox" class="filter-class" value="pothole" checked>
+                            🔴 Potholes
+                        </label>
+                        <label>
+                            <input type="checkbox" class="filter-class" value="longitudinal_crack" checked>
+                            🟡 Longitudinal Cracks
+                        </label>
+                        <label>
+                            <input type="checkbox" class="filter-class" value="crazing" checked>
+                            🟢 Crazing
+                        </label>
+                        <label>
+                            <input type="checkbox" class="filter-class" value="faded_marking" checked>
+                            🔵 Faded Markings
+                        </label>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>💾 Export</h2>
+                    <button class="btn btn-secondary" id="exportGeoJSON">Export GeoJSON</button>
+                    <button class="btn btn-secondary" id="exportCSV">Export CSV</button>
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <main class="map-container">
+                <div id="map"></div>
+                <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing...</p>
+                </div>
+            </main>
+        </div>
+
+        <!-- Detection Results Modal -->
+        <div id="resultsModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Detection Results</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
