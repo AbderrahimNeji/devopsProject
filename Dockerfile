@@ -1,62 +1,53 @@
-# Multi-stage Dockerfile for Road Degradation Detection API
-
-# Stage 1: Builder
-FROM python:3.10-slim as builder
-
-WORKDIR /tmp
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    git \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-# Stage 2: Runtime
+# PROJECT 4: DEGRADATION DETECTION - Dockerfile
 FROM python:3.10-slim
 
-WORKDIR /app
-
-# Install runtime dependencies only
+# Installer les dépendances système pour OpenCV (Debian trixie slim)
 RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
-    curl \
+    libxrender1 \
+    libgomp1 \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Définir le répertoire de travail
+WORKDIR /app
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONPATH=/app:$PYTHONPATH
+# Copier les dépendances et installer
+COPY requirements.txt .
 
-# Copy application code
+# Réduire les erreurs de timeout réseau et forcer les roues CPU de PyTorch (plus légères)
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_PROGRESS_BAR=off
+
+# Installer PyTorch CPU avant ultralytics pour éviter le téléchargement des roues CUDA (~900MB)
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+    torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2
+
+# Installer le reste des dépendances (ultralytics, opencv, etc.)
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
+
+# Copier le projet
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /app/models/weights \
-    /app/data/processed \
-    /app/results/detections \
-    /app/results/visualizations \
-    /app/logs
+# Télécharger les modèles YOLOv8 de base si absents
+RUN mkdir -p models && \
+    if [ ! -f yolov8n.pt ]; then \
+    wget -q https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n.pt -O yolov8n.pt; \
+    fi && \
+    if [ ! -f models/yolov8m.pt ]; then \
+    wget -q https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8m.pt -O models/yolov8m.pt; \
+    fi
 
-# Download pretrained YOLOv8n model
-RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')" || true
+# Créer les dossiers de résultats et data
+RUN mkdir -p resultats/detection resultats/geojson resultats/evaluation \
+    data/rdd2022_yolo temp_download
 
-# Expose port for API
-EXPOSE 8000
+# Exposer le port pour le dashboard (serveur HTTP)
+EXPOSE 9090
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-# Run the application
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Commande par défaut : afficher les instructions
+CMD ["python", "demo_project4.py"]

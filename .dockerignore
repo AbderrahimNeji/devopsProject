@@ -1,0 +1,48 @@
+# Fichiers à exclure de l'image Docker
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+
+# Résultats et modèles entraînés (trop gros)
+runs/
+resultats/
+results/
+uploads/
+
+# Datasets volumineux (téléchargés à la demande)
+data/rdd2022_yolo/train/
+data/rdd2022_yolo/test/
+data/rdd2022_yolo/val/
+temp_download/
+temp_sample_potholes/
+
+# Modèles entraînés personnalisés (à copier manuellement si besoin)
+models/rdd2022_best.pt
+models/yolov8l.pt
+
+# Fichiers de développement
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Documentation non essentielle
+README.md
+VERIFICATION.md
+PROJECT_4_COMPLIANCE.md
+report.md
+FINAL_SUMMARY.md
+RESUME_VISUEL.md
+COMMENCER_ICI.txt

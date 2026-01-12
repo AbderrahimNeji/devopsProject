@@ -22,27 +22,47 @@ This project implements an automated road degradation detection system using YOL
 pip install -r requirements.txt
 ```
 
-### Train the Model
+### Prepare Dataset (RDD2022 Czech)
 
 ```bash
 cd road-degradation-detection
+python convert_rdd2022_to_yolo.py
+```
+
+**Output**: `data/rdd2022_yolo/` (train/val/test splits, dataset.yaml)  
+**Duration**: 1-3 minutes (downloads 245MB, converts ~3500 images)
+
+### Train the Model (GPU Recommended)
+
+**Local CPU** (very slow, not recommended):
+
+```bash
 python simple_train.py
 ```
 
-**Output**: `runs/detect/simple_model/weights/best.pt`  
-**Duration**: 10-30 minutes (CPU), 5-10 minutes (GPU)
+**Google Colab GPU** (recommended):
+
+```bash
+# See README for Colab notebook commands
+# Train yolov8m, 80 epochs, 960px → best.pt
+```
+
+**Current Model**: `models/rdd2022_best.pt` (Colab-trained baseline)
 
 ### Run Detection
 
 ```bash
-# On images
-python simple_detect.py data/potholes/image.jpg
+# On images (RDD2022 val split)
+python simple_detect.py data/rdd2022_yolo/val/images
 
-# On video
-python simple_detect.py data/videos/road_video.mp4
+# On custom potholes
+python simple_detect.py data/potholes
+
+# On video (GPS integration)
+python simple_detect_gps.py data/videos/road_video.mp4
 ```
 
-**Output**: `resultats/detection/` (annotated images/videos)
+**Output**: `runs/detect/*/` (annotated images, labels with confidence)
 
 ### Video → GPS → GeoJSON Pipeline
 

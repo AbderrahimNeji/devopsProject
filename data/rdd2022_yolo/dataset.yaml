@@ -1,0 +1,14 @@
+# RDD2022 Dataset - YOLO Format
+# Converted from PascalVOC
+
+path: C:\Users\ALLTEC\OneDrive\Bureau\devopsProject\road-degradation-detection\data\rdd2022_yolo  # dataset root
+train: train/images  # train images (relative to 'path')
+val: val/images     # val images (relative to 'path')
+
+# Classes (RDD2022)
+nc: 4  # number of classes
+names:
+  0: longitudinal_crack  # D00
+  1: transverse_crack    # D10
+  2: alligator_crack     # D20
+  3: pothole             # D40
