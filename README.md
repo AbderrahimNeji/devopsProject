@@ -85,7 +85,7 @@ Do a short CPU smoke test (slow, optional):
 python simple_train.py
 ```
 
-Use the provided production model `models/rdd2022_best.pt` for real work. It was trained on Colab GPU with yolov8m at 960px.
+Use the provided production model `models/rdd2022_best.pt` for real work. It was trained on Colab GPU with yolov8m at 960px
 
 Run detections on images or folders:
 

@@ -11,7 +11,7 @@ Key points: dataset has about 3752 images and 8.5k boxes; classes are longitudin
 - Detect and classify the four damage types.
 - Attach GPS positions to detections from video timestamps.
 - Display detections and metadata on an interactive web map.
-- Keep deployment simple through Docker and a pre-trained model.
+- Keep deployment simple through Docker and a pre-trained model
 
 Success is measured by detection quality (mAP, precision/recall), GPS accuracy, and throughput on CPU/GPU.
 

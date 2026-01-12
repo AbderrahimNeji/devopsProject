@@ -1,5 +1,3 @@
-# PROJECT 4: DEGRADATION DETECTION - Dépendances
-
 # Numpy (fix compatibility with PyTorch)
 numpy<2
 

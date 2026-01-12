@@ -1,4 +1,3 @@
-# Fichiers à exclure de l'image Docker
 __pycache__/
 *.pyc
 *.pyo

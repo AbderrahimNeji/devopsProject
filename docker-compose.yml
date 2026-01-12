@@ -1,5 +1,3 @@
-# PROJECT 4: DEGRADATION DETECTION - Docker Compose
-
 services:
   degradation-detection:
     build: .

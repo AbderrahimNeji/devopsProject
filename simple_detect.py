@@ -24,7 +24,7 @@ if not os.path.exists(model_path):
 
 # Vérifier la source
 if not os.path.exists(source):
-    print(f"\n❌ Source introuvable: {source}")
+    print(f"\n Source introuvable: {source}")
     print("   Utilise un chemin valide (image, vidéo ou dossier)")
     sys.exit(1)
 
