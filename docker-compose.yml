@@ -1,5 +1,4 @@
 # PROJECT 4: DEGRADATION DETECTION - Docker Compose
-version: '3.8'
 
 services:
   degradation-detection:
@@ -14,7 +13,7 @@ services:
       # Optionnel: monter vos propres vidéos/images
       - ./data:/app/data
     ports:
-      - "9090:9090"
+      - "3000:9090"
     environment:
       - PYTHONUNBUFFERED=1
     # Commande par défaut

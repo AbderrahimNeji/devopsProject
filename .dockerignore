@@ -26,8 +26,8 @@ data/rdd2022_yolo/val/
 temp_download/
 temp_sample_potholes/
 
-# Modèles entraînés personnalisés (à copier manuellement si besoin)
-models/rdd2022_best.pt
+# Modèles entraînés personnalisés (grands modèles exclus)
+# models/rdd2022_best.pt - INCLUS pour les tests
 models/yolov8l.pt
 
 # Fichiers de développement

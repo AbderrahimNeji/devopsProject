@@ -1,5 +1,8 @@
 # PROJECT 4: DEGRADATION DETECTION - Dépendances
 
+# Numpy (fix compatibility with PyTorch)
+numpy<2
+
 # YOLOv8 (Détection d'objets)
 ultralytics>=8.0.0
 
