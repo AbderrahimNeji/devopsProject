@@ -1,0 +1,24 @@
+# PROJECT 4: DEGRADATION DETECTION - Docker Compose
+version: '3.8'
+
+services:
+  degradation-detection:
+    build: .
+    image: degradation-detection:latest
+    container_name: road-degradation-detector
+    volumes:
+      # Monter les résultats pour les récupérer facilement
+      - ./resultats:/app/resultats
+      # Monter les runs pour conserver les modèles entraînés
+      - ./runs:/app/runs
+      # Optionnel: monter vos propres vidéos/images
+      - ./data:/app/data
+    ports:
+      - "9090:9090"
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Commande par défaut
+    command: python demo_project4.py
+    # Pour garder le conteneur actif
+    # stdin_open: true
+    # tty: true

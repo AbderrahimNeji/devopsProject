@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte des Anomalies Routières</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        #map {
+            flex: 1;
+            width: 100%;
+        }
+        
+        .legend {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .legend h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .popup-content {
+            min-width: 200px;
+        }
+        
+        .popup-content h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .popup-content p {
+            margin: 5px 0;
+        }
+        
+        .confidence-high { color: #28a745; }
+        .confidence-medium { color: #ffc107; }
+        .confidence-low { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🗺️ Carte des Anomalies Routières</h1>
+        <p class="subtitle">Visualisation géolocalisée des détections</p>
+    </header>
+    
+    <div class="controls">
+        <button class="btn" onclick="document.getElementById('geojsonInput').click()">
+            📂 Charger GeoJSON
+        </button>
+        <input type="file" id="geojsonInput" class="file-input" accept=".geojson,.json">
+        
+        <button class="btn" onclick="loadSampleData()">
+            🧪 Données d'exemple
+        </button>
+        
+        <button class="btn" onclick="clearMap()">
+            🗑️ Effacer
+        </button>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalDetections">0</div>
+                <div class="stat-label">Détections</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgConfidence">0%</div>
+                <div class="stat-label">Confiance Moy.</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <script>
+        // Initialiser la carte
+        const map = L.map('map').setView([48.8566, 2.3522], 13);
+        
+        // Ajouter le fond de carte
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Cluster de marqueurs
+        let markerCluster = L.markerClusterGroup();
+        map.addLayer(markerCluster);
+        
+        // Légende
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>Types de Détections</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>Nids-de-poule</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span>Fissures</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #17a2b8;"></div>
+                    <span>Autres</span>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+        
+        // Couleurs par type
+        function getMarkerColor(className) {
+            if (className.toLowerCase().includes('pothole')) return '#dc3545';
+            if (className.toLowerCase().includes('crack')) return '#ffc107';
+            return '#17a2b8';
+        }
+        
+        // Charger un fichier GeoJSON
+        document.getElementById('geojsonInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const geojson = JSON.parse(e.target.result);
+                        displayGeoJSON(geojson);
+                    } catch (err) {
+                        alert('Erreur lors de la lecture du fichier GeoJSON: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        // Afficher le GeoJSON sur la carte
+        function displayGeoJSON(geojson) {
+            markerCluster.clearLayers();
+            
+            if (!geojson.features || geojson.features.length === 0) {
+                alert('Aucune détection dans ce fichier');
+                return;
+            }
+            
+            let totalConfidence = 0;
+            
+            geojson.features.forEach(feature => {
+                const coords = feature.geometry.coordinates;
+                const props = feature.properties;
+                
+                // Créer le marqueur
+                const marker = L.circleMarker([coords[1], coords[0]], {
+                    radius: 8,
+                    fillColor: getMarkerColor(props.class),
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+                
+                // Popup avec informations
+                const confidence = (props.confidence * 100).toFixed(1);
+                const confidenceClass = confidence > 70 ? 'confidence-high' : 
+                                       confidence > 40 ? 'confidence-medium' : 'confidence-low';
+                
+                marker.bindPopup(`
+                    <div class="popup-content">
+                        <h3>🚧 ${props.class}</h3>
+                        <p><strong>Confiance:</strong> <span class="${confidenceClass}">${confidence}%</span></p>
+                        <p><strong>Frame:</strong> ${props.frame}</p>
+                        <p><strong>Position:</strong> ${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}</p>
+                        ${props.timestamp ? `<p><strong>Temps:</strong> ${new Date(props.timestamp).toLocaleString()}</p>` : ''}
+                    </div>
+                `);
+                
+                markerCluster.addLayer(marker);
+                totalConfidence += props.confidence;
+            });
+            
+            // Mettre à jour les statistiques
+            document.getElementById('totalDetections').textContent = geojson.features.length;
+            const avgConf = (totalConfidence / geojson.features.length * 100).toFixed(0);
+            document.getElementById('avgConfidence').textContent = avgConf + '%';
+            
+            // Ajuster la vue de la carte
+            if (geojson.features.length > 0) {
+                const bounds = L.geoJSON(geojson).getBounds();
+                map.fitBounds(bounds);
+            }
+        }
+        
+        // Données d'exemple
+        function loadSampleData() {
+            const sampleGeoJSON = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [2.3522, 48.8566]
+                        },
+                        "properties": {
+                            "class": "pothole",
+                            "confidence": 0.89,
+                            "frame": 120,
+                            "timestamp": new Date().toISOString()
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [2.3545, 48.8575]
+                        },
+                        "properties": {
+                            "class": "pothole",
+                            "confidence": 0.76,
+                            "frame": 450,
+                            "timestamp": new Date().toISOString()
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [2.3510, 48.8580]
+                        },
+                        "properties": {
+                            "class": "crack",
+                            "confidence": 0.65,
+                            "frame": 780,
+                            "timestamp": new Date().toISOString()
+                        }
+                    }
+                ]
+            };
+            
+            displayGeoJSON(sampleGeoJSON);
+        }
+        
+        // Effacer la carte
+        function clearMap() {
+            markerCluster.clearLayers();
+            document.getElementById('totalDetections').textContent = '0';
+            document.getElementById('avgConfidence').textContent = '0%';
+        }
+        
+        // Charger automatiquement le dernier GeoJSON si disponible
+        window.addEventListener('load', function() {
+            // Vous pouvez ajouter ici le chargement automatique du dernier fichier
+        });
+    </script>
+</body>
+</html>
